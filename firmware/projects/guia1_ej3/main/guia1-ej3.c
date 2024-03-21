@@ -31,6 +31,7 @@
 #include "freertos/task.h"
 
 /*==================[macros and definitions]=================================*/
+// le pongo numeros para poder usarlo en el switch (porque solo me va a registrar los números, no los modos)
 #define ON 1
 #define OFF 0
 #define TOGGLE 2
