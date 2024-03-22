@@ -1,10 +1,16 @@
-/*! @mainpage Template
- *
+/** @mainpage Proyecto 1: Guía de ejercicios prácticos.
+  * Configuración de placa para obtener por display datos de 32 bits
+
  * @section genDesc General Description
  *
- * This section describes how the program works.
- *
- * <a href="https://drive.google.com/...">Operation Example</a>
+ * Aplicación donde podemos mostrar por display un dato de 32 bits
+ * Escriba una función que reciba un dato de 32 bits,
+ * la cantidad de dígitos de salida y dos vectores de estructuras del tipo  gpioConf_t. 
+ * Uno  de estos vectores es igual al definido en el punto anterior y el otro vector 
+ * mapea los puertos con el dígito del LCD a donde mostrar un dato.
+ * La función deberá mostrar por display el valor que recibe, pudiendo 
+ * reutilizar las funciones de los ejercicios anteriores.
+ * 
  *
  * @section hardConn Hardware Connection
  *
@@ -17,7 +23,8 @@
  *
  * |   Date	    | Description                                    |
  * |:----------:|:-----------------------------------------------|
- * | 12/09/2023 | Document creation		                         |
+ * | 21/03/2024 | Document creation								 |
+ * | 22/03/2024 | Commit with first version of the code          |
  *
  * @author Giovanna Viñoli (giovanna.vinoli@uner.edu.ar)
  *
@@ -31,17 +38,35 @@
 /*==================[macros and definitions]=================================*/
 
 /*==================[internal data definition]===============================*/
+/** @def gpioConfig_t
+ *  @brief Estructura que utilizaremos para confirugrar los diferentes pines GPIO
+*/
 typedef struct {
 	gpio_t pin;
 	io_t dir;
 }gpioConfig_t;
 /*==================[internal functions declaration]=========================*/
+/**
+ * @fn void inicializarGPIO(gpioConfig_t *vectorGpio)
+ * @brief Inicializa los pines y la dirección de salida en los que van a trabajar (input o output)
+ * @param vectorGpio puntero a vector que contiene datos de tipo struct
+ * @return 
+*/
 void inicializarGPIO(gpioConfig_t *vectorGpio){
 	for(int i=0; i<len(vectorGpio); i++){
 		GPIOInit(vectorGpio[i].pin, vectorGpio[i].dir);
 	}
 }
 
+/**
+ * @fn void convertToBcdArray(uint32_t data, uint8_t digits, uint8_t *bcdNumber)
+ * @brief Convierte un valor de 32 bits a un array de valores de 8 bits que almacena cada
+ * dígito del valor
+ * @param data valor de 32 bits del cual quiero obtener cada dígito por separado
+ * @param digits número de 8 bits que representa la cantidad de dígitos que posee el valor de 32 bits
+ * @param bcdNumber puntero array que contiene valores de 8 bits donde se almacenarán los dígitos del valor
+ * @return 
+*/
 void convertToBcdArray(uint32_t data, uint8_t digits, uint8_t *bcdNumber){
 	//creo una variable auxiliar donde voy a guardar el resto de cada operación sobre el número
 	uint8_t variableAuxiliar;
@@ -55,6 +80,13 @@ void convertToBcdArray(uint32_t data, uint8_t digits, uint8_t *bcdNumber){
 	}
 	
 }
+/**
+ * @fn void configurarBcdAGpio(uint8_t digitoBcd, gpioConfig_t *vectorGpio)
+ * @brief Coloca en alto o bajo las entradas de BCD a 7 segmentos.
+ * @param digitoBcd número que quiero mostrar en el display
+ * @param vectorGpio puntero a array que almacena los GPIO a configurar
+ * @return 
+*/
 void configurarBcdAGpio(uint8_t digitoBcd, gpioConfig_t *vectorGpio){
 	
 	for(int i=0; i<4; i++){
@@ -67,6 +99,15 @@ void configurarBcdAGpio(uint8_t digitoBcd, gpioConfig_t *vectorGpio){
 	}
 
 }
+/**
+ * @fn void funcion(uint32_t dato, uint8_t digitos, gpioConfig_t *vectorGpio, gpioConfig_t *vectorLCD)
+ * @brief Muestra por display un valor que recibe de 32 bits
+ * @param dato valor que quiero mostrar en el display
+ * @param digitos cantidad de dígitos que contiene el dato
+ * @param vectorGpio vector que contiene los pines y direcciones para configurar los bits de entrada
+ * @param vectorLCD vector que contiene los puertos a los dígitos del LCD que voy a configurar
+ * @return 
+*/
 void funcion(uint32_t dato, uint8_t digitos, gpioConfig_t *vectorGpio, gpioConfig_t *vectorLCD)
 {
 	uint8_t vectorBcd[digitos];// creo un vector que almacene cada dígito del dato
