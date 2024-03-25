@@ -17,6 +17,17 @@
  * |    Peripheral  |   ESP32   	|
  * |:--------------:|:--------------|
  * | 	PIN_X	 	| 	GPIO_X		|
+ * GPIO_20		|		D1
+ * GPIO_21			|		D2
+ * GPIO_22		|		D3
+ * GPIO_23		|		D4
+ * GPIO_19		|		SEL_1
+ * GPIO_18		|		SEL_2
+ * GPIO_9		|		SEL_3
+ * +5V		|		+5V
+ * GND		|		GND
+ * 
+ *
  *
  *
  * @section changelog Changelog
@@ -33,7 +44,7 @@
 /*==================[inclusions]=============================================*/
 #include <stdio.h>
 #include <stdint.h>
-#include gpio_muc.h
+#include "gpio_mcu.h"
 
 /*==================[macros and definitions]=================================*/
 
@@ -52,8 +63,8 @@ typedef struct {
  * @param vectorGpio puntero a vector que contiene datos de tipo struct
  * @return 
 */
-void inicializarGPIO(gpioConfig_t *vectorGpio){
-	for(int i=0; i<len(vectorGpio); i++){
+void inicializarGPIO(gpioConfig_t *vectorGpio, int cantidad){
+	for(int i=0; i<cantidad ; i++){
 		GPIOInit(vectorGpio[i].pin, vectorGpio[i].dir);
 	}
 }
@@ -112,7 +123,7 @@ void funcion(uint32_t dato, uint8_t digitos, gpioConfig_t *vectorGpio, gpioConfi
 {
 	uint8_t vectorBcd[digitos];// creo un vector que almacene cada dígito del dato
 	convertToBcdArray(dato, digitos, vectorBcd); // obtengo cada dígito del dato con la funcion converToBcdArray
-	fot(int i=0; i<digitos; i++){ //creo un bucle for que se repite la cantidad de dígitos que posee el número
+	for(int i=0 ; i<digitos; i++){ //creo un bucle for que se repite la cantidad de dígitos que posee el número
 		
 		configurarBcdAGpio(vectorBcd[i], vectorGpio); // para cada dígito, configuro el vector Gpio para que me muestre el número 
 		
@@ -125,12 +136,12 @@ void funcion(uint32_t dato, uint8_t digitos, gpioConfig_t *vectorGpio, gpioConfi
 /*==================[external functions definition]==========================*/
 void app_main(void){
 	printf("Hello world!\n");
-	uint32_t dato = 456;
+	uint32_t dato = 700;
 	uint8_t cantidadDigitos = 3;
 	gpioConfig_t vectorGpio[4] = {{GPIO_20, GPIO_OUTPUT},{GPIO_21, GPIO_OUTPUT},{GPIO_22, GPIO_OUTPUT},{GPIO_23, GPIO_OUTPUT}};
-	inicializarGPIO(vectorGpio);
+	inicializarGPIO(vectorGpio, 4);
 	gpioConfig_t vectorLCD[3] = {{GPIO_19, GPIO_OUTPUT},{GPIO_18, GPIO_OUTPUT},{GPIO_9, GPIO_OUTPUT}};
-	inicializarGPIO(vectorLCD);
+	inicializarGPIO(vectorLCD, 3);
 	funcion(dato, cantidadDigitos, vectorGpio, vectorLCD);
 }
 /*==================[end of file]============================================*/
