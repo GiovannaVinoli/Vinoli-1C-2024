@@ -44,8 +44,9 @@
 
 /*==================[external functions declaration]=========================*/
 /**
- * @brief HC_SR04 initialization.
- * 
+ * @brief HC_SR04 initialization. Nos permite elegir en qué pines los quiero conectar. no tengo
+ * que ponerlo en un lugar predeterminado.
+ * Pines a donde va conectado los pines del sensor a la placa
  * @param echo GPIO number wher echo pin is connected
  * @param trigger GPIO number wher trigger pin is connected
  * @return true 

@@ -7,9 +7,6 @@
  *
  * @section changelog Changelog
  *
- * |   Date	    | Description                                    |
- * |:----------:|:-----------------------------------------------|
- * | 12/09/2023 | Document creation		                         |
  *
  * @author Giovanna Viñoli (giovanna.vinoli@uner.edu.ar)
  *

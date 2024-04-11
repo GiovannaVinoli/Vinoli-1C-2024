@@ -34,11 +34,18 @@ static void Led1Task(void *pvParameter){
     while(true){
         printf("LED_1 ON\n");
         LedOn(LED_1);
-        vTaskDelay(CONFIG_BLINK_PERIOD_LED_1 / portTICK_PERIOD_MS);
+        vTaskDelay(CONFIG_BLINK_PERIOD_LED_1 / portTICK_PERIOD_MS); //es del kernel del FreeRTOS
+        //que me permite liberar el micro.
         printf("LED_1 OFF\n");
         LedOff(LED_1);
         vTaskDelay(CONFIG_BLINK_PERIOD_LED_1 / portTICK_PERIOD_MS);
     }
+    //en esta funcion estoy en un bucle while infinito, nunca voy a salir. Ahora como tengo el vTaskDelay, 
+    //esa funcion me permite "liberar el micro" y permitir ejecutar otra tarea de la lista de espera. Pasado el 
+    //tiempo de delay que definimos allí, esta tarea estará nuevamente disponible para que cuando el micro se 
+    //libere, pueda ejecutarla de nuevo.
+    //El schedule tiene el control de decidir a quien le da o elige que tarea ejecutar, pero hasta que las 
+    //tareas no lo liberan, no se puede cambiar.
 }
 
 static void Led2Task(void *pvParameter){
@@ -63,8 +70,11 @@ static void Led3Task(void *pvParameter){
     }
 }
 /*==================[external functions definition]==========================*/
-void app_main(void){
+void app_main(void){ // acá voy a crear tareas 
     LedsInit();
+    //xTaskCreate: funciones del Kernel que crea una tarea. La tarea Main crea nuevas tareas
+    //debo parametrizarla: nomrbe de tarea, etiqueta, tamaño de memoria RAM que le asigno, 
+    //campo para pasar parametros (si no quiero nada, arranco con un NULL), nivel de prioridad, puntero a la tarea
     xTaskCreate(&Led1Task, "LED_1", 512, NULL, 5, &led1_task_handle);
     xTaskCreate(&Led2Task, "LED_2", 512, NULL, 5, &led2_task_handle);
     xTaskCreate(&Led3Task, "LED_3", 512, NULL, 5, &led3_task_handle);
