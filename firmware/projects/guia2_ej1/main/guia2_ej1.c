@@ -1,19 +1,37 @@
-/*! @mainpage Template
+/*! @mainpage Proyecto 2 - Ejercicio 1
+ * Medidor de distancia por ultrasonido
  *
  * @section genDesc General Description
+ * Se diseña un firmware donde utilizamos un sensor ultrasónico para realizar medidas de distancias. 
+ * Utilizando los valores de distancias obtenidos, podremos informarlo por dos medios: el primero con
+ * una secuencia específica de iluminación de leds (si la distancia es menor a 10cm, no se enciende ningún
+ * led; si está entre 10 y 20, se enciende el led 1; si está entre 20 y 30 se enciende el led 1 y 2; si es mayor
+ * a 30, se enciende el led 1, 2 y 3); el segundo a través de un display, donde podemos tener la opción
+ * de congelar el valor de medición tras apretar la tecla 2.
+ * El sistema se activa o desactiva presionando la tecla 1.
  *
- * This section describes how the program works.
- *
- * <a href="https://drive.google.com/...">Operation Example</a>
+ * <a href="https://docs.google.com/document/d/13MwvkL35G1JcyPhDN2vl298YrCzqDJw_FseBSXWroOY/edit#heading=h.5fxbx7ywgd2l"></a>
  *
  * @section hardConn Hardware Connection
  *
- * |    EDUCIAA	  |   Periférico   	|
+ * |    ESP32c6	  	|   Hc sr04   	|
  * |:--------------:|:--------------|
- * | GPIO_2			|	ECHO
- * | GPIO_3			|  TRIGGER
+ * | GPIO_3			|	ECHO
+ * | GPIO_2			|  TRIGGER
  * |	+5V			|   +5V
  * |	GND 		|	GND
+ * 
+ * |	ESP32c6		|	Lcditse0803
+ * |:--------------:|:--------------|	
+ * | GPIO_20		|		D1
+ * | GPIO_21		|		D2
+ * | GPIO_22		|		D3
+ * | GPIO_23		|		D4
+ * | GPIO_19		|		SEL_1
+ * | GPIO_18		|		SEL_2
+ * | GPIO_9			|		SEL_3
+ * | +5V			|		+5V
+ * | GND			|		GND
  *
  *	
  *
@@ -22,6 +40,7 @@
  *
  * |   Date	    | Description                                    |
  * |:----------:|:-----------------------------------------------|
+ * |:11/04/2024 | : creación de documentación
  *
  * @author Giovanna Viñoli (giovanna.vinoli@uner.edu.ar)
  *
@@ -42,7 +61,19 @@
 #define CONFIG_BLINK_PERIOD_1000 1000
 #define CONFIG_BLINK_PERIOD_200 200
 
-bool activar = true, congelar = false;
+/** @def activar
+ *  @brief variable booleana global que registra si el sistema está ON u OFF
+*/
+bool activar = true; 
+/** @def congelar
+ *  @brief variable booleana global que registra si el display queda en modo congelado
+*/
+bool congelar = false;
+
+/**
+ * @def distancia
+ * @brief variable global que almacena el valor de distancia medido por el sensor
+*/
 float distancia;
 /*==================[internal data definition]===============================*/
 TaskHandle_t sensar_task_handle = NULL;
@@ -51,6 +82,14 @@ TaskHandle_t display_task_handle = NULL;
 TaskHandle_t switches_task_handle = NULL;
 
 /*==================[internal functions declaration]=========================*/
+
+/**
+ * @fn static void SensarTask(void *pvParameter)
+ * @brief función que ejecuta la tarea de sensar, guardando en la variable distancia lo 
+ * obtenido por el sensor
+ * @param pvParameter puntero que no es utilizado
+ * @return 
+*/
 static void SensarTask(void *pvParameter){
 	while(true){
 		printf("Sensando\n");
@@ -61,6 +100,12 @@ static void SensarTask(void *pvParameter){
 	}
 }
 
+/**
+ * @fn static void LedsTask(void *pvParameter)
+ * @brief función que enciende los diferentes leds, acorde al valor de distancia 
+ * @param pvParameter puntero que no es utilizado
+ * @return 
+*/
 static void LedsTask(void *pvParameter){
 	while(true){
 		printf("Leds\n");
@@ -91,6 +136,12 @@ static void LedsTask(void *pvParameter){
 	}
 }
 
+/**
+ * @fn static void DisplayTask(void *pvParameter)
+ * @brief función que muestra por display el valor de la medición 
+ * @param pvParameter puntero que no es utilizado
+ * @return 
+*/
 static void DisplayTask(void *pvParameter){
 	while(true){
 		if(activar == true){
@@ -105,6 +156,13 @@ static void DisplayTask(void *pvParameter){
 	}
 }
 
+/**
+ * @fn static void SwitchesTask(void *pvParameter)
+ * @brief función que de reconoce cuando se presionan los switches y cambia el estado 
+ * de las variables que almacenan si el sistema está activo o no, y si se congela el display
+ * @param pvParameter puntero que no es utilizado
+ * @return 
+*/
 static void SwitchesTask(void *pvParameter){
 	uint8_t teclas;
 	while(true){

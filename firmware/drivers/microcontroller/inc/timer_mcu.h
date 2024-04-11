@@ -17,6 +17,7 @@
  * |   Date	    | Description                                    						|
  * |:----------:|:----------------------------------------------------------------------|
  * | 20/10/2023 | Document creation		                         						|
+ * Los timer debemos inicializarlos, podemos darle start y stop.
  * 
  **/
 
@@ -37,9 +38,10 @@ typedef enum timers {
  * @brief Timer configuration struct
  */
 typedef struct {				
-	timer_mcu_t timer;		/*!< Selected timer */
-	uint32_t period;		/*!< Period (in us) */
-	void *func_p;			/*!< Pointer to callback function to call periodically */
+	timer_mcu_t timer;		/*!< Selected timer : definimos que timer quiero usar*/ 
+	uint32_t period;		/*!< Period (in us) : cada cuanto tiempo queremos que el timer me genere una interrupción*/
+	void *func_p;			/*!< Pointer to callback function to call periodically : que función queremos que se ejecute cada
+	ese lapso de tiempo*/
 	void *param_p;			/*!< Pointer to callback function parameter */
 } timer_config_t;
 /*==================[external data declaration]==============================*/
@@ -50,7 +52,7 @@ typedef struct {
  * 
  * @note Timer are stopped after init
  * 
- * @param timer_ini Pointer to timer configuration
+ * @param timer_ini Pointer to timer configuration: estructura de inicialización que recibe 4 parametros
  */
 void TimerInit(timer_config_t *timer_ini);
 

@@ -17,6 +17,10 @@
             "path": "projects/2_blinking_tasks"
         },
         {
+            "name": "3_blinking_timer",
+            "path": "projects/3_blinking_timer"
+        },
+        {
             "name": "x_template",
             "path": "projects/x_template"
         },
@@ -41,7 +45,12 @@
             "path": "projects/guia1_ej6"
         },
         {
+            "name": "guia2_ej1",
             "path": "projects/guia2_ej1"
+        },
+        {
+            "name": "guia2_ej2",
+            "path": "projects/guia2_ej2"
         }
     ],
     "settings": {

@@ -53,10 +53,11 @@ int8_t SwitchesRead(void);
  * @brief Enables the interruption of a particular key and assigns a callback function.
  * 
  * @param tec Selected switch
- * @param ptrIntFunc Pointer to callback function
- * @param args Pointer to callback function parameters
+ * @param ptrIntFunc Pointer to callback function: puntero a funcion que queremos ejecutar.
+ * @param args Pointer to callback function parameters: le paso argumentos a la función.
  */
 void SwitchActivInt(switch_t tec, void *ptrIntFunc, void *args);
+//activa una función cuando presionamos una tecla. Ejecutamos una funcion a partir de un puntero: se le llama funcion de callback
 
 /** @} doxygen end group definition */
 /** @} doxygen end group definition */
