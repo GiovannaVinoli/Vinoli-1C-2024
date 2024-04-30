@@ -1,6 +1,9 @@
 #define BUFFER_SIZE 231
 /*==================[internal data definition]===============================*/
-TaskHandle_t main_task_handle = NULL;
+/**
+ * @def ecg[BUFFER_SIZE]
+ * @brief vector de valores de tensión que representan una señal digital de ECG
+*/
 const char ecg[BUFFER_SIZE] = {
     76, 77, 78, 77, 79, 86, 81, 76, 84, 93, 85, 80,
     89, 95, 89, 85, 93, 98, 94, 88, 98, 105, 96, 91,

@@ -76,9 +76,26 @@ bool congelar = false;
 */
 float distancia;
 /*==================[internal data definition]===============================*/
+
+/**
+ * @def sensar_task_handle
+ * @brief identificador de la tarea encargada de sensar
+*/
 TaskHandle_t sensar_task_handle = NULL;
+/**
+ * @def leds_task_handle
+ * @brief identificador de la tarea encargada de prender y apagar leds
+*/
 TaskHandle_t leds_task_handle = NULL;
+/**
+ * @def display_task_handle
+ * @brief identificador de la tarea encargada de configurar el display
+*/
 TaskHandle_t display_task_handle = NULL;
+/**
+ * @def switches_task_handle
+ * @brief identificador de la tarea encargada de reconocer los switches
+*/
 TaskHandle_t switches_task_handle = NULL;
 
 /*==================[internal functions declaration]=========================*/
@@ -188,11 +205,17 @@ static void SwitchesTask(void *pvParameter){
 
 /*==================[external functions definition]==========================*/
 void app_main(void){
+	/// Inicialización de los leds
 	LedsInit();
+	/// Inicialización del sensor ultrasónico, donde se define qué pin está conectado al echo y al trigger 
+	/// del sensor
 	HcSr04Init(GPIO_3, GPIO_2);
+	/// Inicialización de los Switches
 	SwitchesInit();
+	/// Inicialización del display
 	LcdItsE0803Init();
 
+	/// Creación de nuevas tareas en FreeRTOS, donde le paso los parametros de cada tarea definida anteriormente
 	xTaskCreate(&SwitchesTask, "Switches", 512, NULL, 4, &switches_task_handle);
 	xTaskCreate(&SensarTask, "Sensar", 512, NULL, 4, &sensar_task_handle);
 	xTaskCreate(&LedsTask, "Leds", 512, NULL, 4, &leds_task_handle);

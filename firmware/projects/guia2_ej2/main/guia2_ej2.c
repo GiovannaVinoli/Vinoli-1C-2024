@@ -55,14 +55,25 @@
 
 /*==================[macros and definitions]=================================*/
 /// defino el tiempo (en microsegundos) entre las interrupciones del timer. 
-///Probamos ponerlo como 1000000, pero respondían muy lento las actualizaciones, así 
+/// Probamos ponerlo como 1000000, pero respondían muy lento las actualizaciones, así 
 /// que lo bajamos a 500000 
 #define CONFIG_BLINK_PERIOD_uS 500000
 /**
- * Defino variables globales
+ * @def activar
+ * @brief variable global booleana para controlar cuando el sistema está encendido o apagado
 */
-bool activar = true, congelar = false;
+bool activar = true;
+/**
+ * @def congelar
+ * @brief variable global booleana para controlar cuando coneglar el valor en el display
+*/
+bool congelar = false;
+/**
+ * @def activar
+ * @brief variable global flotante para almacenar la distancia adquirida por el sensor
+*/
 float distancia;
+
 /*==================[internal data definition]===============================*/
 /// tipo (struct) de FREERTOS utilizado para hacer referencia a las tareas y así
 /// usar las tareas (a partir de estar referidas por estos TaskHandle) en otros 
@@ -168,6 +179,10 @@ estado de activar y congelar respectivamente
 */
 //creo las dos funciones que serán llamadas cuando se den las interrupciones
 
+/**
+ * @fn static void FuncionSwitch(void *pvParameter)
+ * @brief función encargada de invertir el estado de la variable booleana que recibe
+*/
 static void FuncionSwitch(void *pvParam){
 	bool *puntero= (bool*)(pvParam);
 	*puntero =! *puntero;
@@ -182,12 +197,12 @@ void app_main(void){
 	LcdItsE0803Init();
 	SwitchesInit();
 	/// defino que cuando se presiona los switch, que se ejecute determinada función, y le mando 
-	/// otro parámetro
+	/// los parámetros que quiero modificar al presionar cada uno
 	SwitchActivInt(SWITCH_1,FuncionSwitch, &activar);
 	SwitchActivInt(SWITCH_2,FuncionSwitch, &congelar);
 
-	/* Definición del timer: lo que me hace definir más de un timer es cuando quiero trabajar con diferntes bases de tiempo.
-	Como ahora tengo la misma base de tiempo que es 1 segundo = 1000000 microsegundos, voy a crear solo uno para las mismas tareas*/
+	/// Definición del timer: lo que me hace definir más de un timer es cuando quiero trabajar con diferntes bases de tiempo.
+	/// Como ahora tengo la misma base de tiempo que es 1 segundo = 1000000 microsegundos, voy a crear solo uno para las mismas tareas
     
 	timer_config_t  timer_A= {
         .timer = TIMER_A, /// nombre del timer

@@ -1,9 +1,10 @@
-//Ejercicio 3.1-prueba
-/* *
+/*! @mainpage Template
+ *
  * @section genDesc General Description
- * Se utiliza el medidor de distancia con un sensor ultrasónico de la actividad anterior, donde 
- * las funcionalidades de las teclas 1 y 2 de la placa, se implementan como interrupciones y las
- * tareas se le agregan timers
+ * Se implementa un medidos de distancia por ultrasonido con 
+ * interrupciones, enviando por el puerto serie los datos de los
+ * valores obtenidos por el sensor y leyendo desde el mismo algunas
+ * teclas para controlar la EDU-ESP32c6
  *
 
  *
@@ -42,6 +43,7 @@
  * |   Date	    | Description                                    |
  * |:----------:|:-----------------------------------------------|
  * |:12/04/2024:|: Generación del proyecto					 |
+ * |:30/04/2024 |: Generación de la documentación                |
  *
  * @author Giovanna Viñoli (giovanna.vinoli@uner.edu.ar)
  *
@@ -68,16 +70,40 @@
 /// que lo bajamos a 500000 
 #define CONFIG_BLINK_PERIOD_uS 500000
 /**
- * Defino variables globales
+ * @def activar
+ * @brief variable global booleana para controlar cuando el sistema está encendido o apagado
 */
-bool activar = true, congelar = false, pulgadas = false, ver_maximo = false;
+bool activar = true;
+/**
+ * @def congelar
+ * @brief variable global booleana para controlar cuando coneglar el valor en el display
+*/
+bool congelar = false;
+/**
+ * @def pulgadas
+ * @brief variable global booleana para controlar cuando cambiar la unidad de medida del 
+ * sensor de cm a pulgadas
+*/
+bool pulgadas = false;
+/**
+ * @def ver_maximo
+ * @brief variable global booleana para controlar cuando se muestra el valor máximo de 
+ * distancia adquirido por el sensor
+*/
+bool ver_maximo = false;
+/// @brief definicion de la variable distancia (almacena los valores de distancia que adquiere
+/// el sensor); maximo (almacena el valor máximo de distancia medido)
 uint16_t distancia, maximo=0;
+/// @brief definicion de variables de distancias, en cm, minima, media y máxima que utilizará el
+/// programa para configurar la secuencia de encendido de leds
 uint16_t distancia_min_cm = 10, distancia_media_cm =20, distamcia_max_cm = 30;
+/// @brief definicion de variables de distancias, en pulgadas, minima, media y máxima que utilizará el
+/// programa para configurar la secuencia de encendido de leds
 uint16_t distancia_min_in = 10/2.54, distancia_media_in = 20/2.54, distamcia_max_in =30/2.54;
 
 /*==================[internal data definition]===============================*/
-/// tipo (struct) de FREERTOS utilizado para hacer referencia a las tareas y así
-/// usar las tareas (a partir de estar referidas por estos TaskHandle) en otros 
+/// @brief identificadores de FREERTOS utilizados para hacer referencia a las tareas y así
+/// poder ejecutarlas (a partir de estar referidas por estos TaskHandle) en otros 
 /// comandos de vTask como Delete, Create, etc.
 TaskHandle_t sensar_task_handle = NULL;
 TaskHandle_t leds_task_handle = NULL;
@@ -99,22 +125,18 @@ void FuncionTimer(void* param){
 	vTaskNotifyGiveFromISR(MandarDarosUART_handle, pdFALSE);
 }
 
-/* para manejar los switches, a diferencia del ejercicio anterior, debo cambiar la forma de implementarlo. 
-Ya no voy a revisar qué switch es el que se presiona. Ahora voy a configurar directamente cada switch por 
-separado y con la función de la librería switch, "SwitchActivInt" le voy a decir qué tecla se apretó y 
-qué función debe ejecutar cuando esto sucede:
-1) creo dos funciones, "FuncionSwitch1" y "FuncionSwitch2" en donde adentro de la funcion cambio el 
-estado de activar y congelar respectivamente
-2) creo una funcion genérica, en donde le paso por parámetro en la funcion de SwitchActivInt(-- , -- , xx)
-(donde se encuentra la xx) y le paso cuál tendré que modificar: activar o congelar
+/**
+ * @fn static void cambiarEstado(void *pvParameter)
+ * @brief función encargada de invertir el estado de la variable booleana que recibe
 */
-//creo las dos funciones que serán llamadas cuando se den las interrupciones
-
 static void cambiarEstado(bool *pvParam){
 	bool *puntero= (bool*)(pvParam);
 	*puntero =! *puntero;
 }
-
+/**
+ * @fn void FuncionUART(void *param)
+ * @brief función encargada de leer lo que ingresa por el puerto serie
+*/
 void FuncionUART(void* param){
 	uint8_t uart;
 	UartReadByte(UART_PC, &uart);
@@ -143,9 +165,11 @@ void FuncionUART(void* param){
 		break;
 	}
 }
-
-
-static void MandarDatosUART(void* param){
+/**
+ * @fn static void MandarDatosUART(void *pvParameter)
+ * @brief función encargada de enviar datos por el puerto serie 
+*/
+static void MandarDatosUART(void *pvParameter){
 	while(true){ // agregarle la condicion de si esta apagado o prendido, agregarle los cm. y un \n
 		ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
 		if(activar == true){
@@ -204,10 +228,9 @@ static void SensarTask(void *pvParameter){
 	}
 }
 /**
- * @fn static void LedsTask(void *pvParameter)
+ * @fn void configurarLeds(void *pvParameter)
  * @brief función que enciende y apaga los leds dependiendo el valor de la distancia medida por el sensor
 */
-
 void configurarLeds(uint16_t distancia_min, uint16_t distancia_media, uint16_t distancia_max){
 	if(distancia <= distancia_min){
 		LedsOffAll();
@@ -228,7 +251,11 @@ void configurarLeds(uint16_t distancia_min, uint16_t distancia_media, uint16_t d
 		LedOn(LED_3);
 	}
 }
-
+/**
+ * @fn static void LedsTask(void *pvParameter)
+ * @brief función que verifica si el sistema está activo, verifica en qué unidad de debe
+ * trabajar la distancia, y enciende o no los leds
+*/
 static void LedsTask(void *pvParameter){
 	//el portMAXdelay te dice que espere infinito por la notificación. Yo podría decirle, che, espera 1 segundo por la notificaicón
 	while(true){
@@ -273,6 +300,7 @@ void app_main(void){
 	HcSr04Init(GPIO_3, GPIO_2);
 	LcdItsE0803Init();
 	SwitchesInit();
+
 	/// defino que cuando se presiona los switch, que se ejecute determinada función, y le mando 
 	/// otro parámetro
 	SwitchActivInt(SWITCH_1,cambiarEstado, &activar);
@@ -281,9 +309,8 @@ void app_main(void){
 	// Congifuracion de puertos:
 	//GPIOInit(pin , dirección: input u  output);
 
-	/* Definición del timer: lo que me hace definir más de un timer es cuando quiero trabajar con diferntes bases de tiempo.
-	Como ahora tengo la misma base de tiempo que es 1 segundo = 1000000 microsegundos, voy a crear solo uno para las mismas tareas*/
-    
+	/// Definición del timer: lo que me hace definir más de un timer es cuando quiero trabajar con diferntes bases de tiempo.
+	/// Como ahora tengo la misma base de tiempo que es 1 segundo = 1000000 microsegundos, voy a crear solo uno para las mismas tareas 
 	timer_config_t  timer_A= {
         .timer = TIMER_A, /// nombre del timer
         .period = CONFIG_BLINK_PERIOD_uS, /// período de tiempo
@@ -291,18 +318,20 @@ void app_main(void){
 		/// línea anterior. 
         .param_p = NULL
     };
-		/// Inicialización del timer
+	
+	/// Inicialización del timer
 	TimerInit(&timer_A);
 
+	/// configuración de la UART
 	serial_config_t Uart = {
 		.port = UART_PC,
 		.baud_rate = 9600,
 		.func_p = FuncionUART,
 		.param_p = NULL
 	};
+
 	/// Inicializo el UART
 	UartInit(&Uart);
-
 
 	/// creación de las tareas que quiero ejecutar 
 	xTaskCreate(&SensarTask, "Sensar", 512, NULL, 4, &sensar_task_handle);

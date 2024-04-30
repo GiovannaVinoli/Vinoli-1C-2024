@@ -1,23 +1,27 @@
 /*! @mainpage Template
  *
  * @section genDesc General Description
- *
- * This section describes how the program works.
- *
- * <a href="https://drive.google.com/...">Operation Example</a>
+ * Se implementa una aplicación para digitalizar una señal analógica 
+ * y viceversa, transmitiéndola por un graficador de puerto serie de la PC.
+ * 
  *
  * @section hardConn Hardware Connection
  *
- * |    Peripheral  |   ESP32   	|
+ * |    ESP32c6	  |   Periférico   	|
  * |:--------------:|:--------------|
- * | 	PIN_X	 	| 	GPIO_X		|
+ * | 			|	
+ * | 			|  
+ * |			|   
+ * |	 		|	
+ *	
  *
  *
  * @section changelog Changelog
  *
  * |   Date	    | Description                                    |
  * |:----------:|:-----------------------------------------------|
- * | 12/09/2023 | Document creation		                         |
+ * |:12/04/2024:|: Generación del proyecto					 |
+ * |:30/04/2024 |: Generación de la documentación                |
  *
  * @author Giovanna Viñoli (giovanna.vinoli@uner.edu.ar)
  *
@@ -35,6 +39,10 @@
 #include "ecg.h"
 
 /*==================[macros and definitions]=================================*/
+/**
+ * @def valores
+ * @brief 
+*/
 uint16_t valores;
 int i =0;
 
