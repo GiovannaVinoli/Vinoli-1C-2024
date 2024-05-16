@@ -148,5 +148,20 @@ void TimerReset(timer_mcu_t timer){
 	 	break;
 	}
 }
-
+//agregado por mi
+uint64_t TimerGetCount(timer_mcu_t timer){
+	uint64_t value;
+	switch(timer){
+	 	case TIMER_A:
+	 		gptimer_get_raw_count(timer_a, &value);
+		break;
+	 	case TIMER_B:
+	 		gptimer_get_raw_count(timer_b, &value);
+		break;
+	 	case TIMER_C:
+	 		gptimer_get_raw_count(timer_c, &value);
+		break;
+	}
+	return value;
+}
 /*==================[end of file]============================================*/

@@ -77,9 +77,11 @@ void TimerStop(timer_mcu_t timer);
  */
 void TimerReset(timer_mcu_t timer);
 
+uint64_t TimerGetCount(timer_mcu_t timer);
 /** @} doxygen end group definition */
 /** @} doxygen end group definition */
 /** @} doxygen end group definition */
 #endif 
+
 
 /*==================[end of file]============================================*/

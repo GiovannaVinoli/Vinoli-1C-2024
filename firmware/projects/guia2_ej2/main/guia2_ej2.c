@@ -112,6 +112,7 @@ static void SensarTask(void *pvParameter){
 		ulTaskNotifyTake(pdTRUE, portMAX_DELAY);    /* Envía una notificación a la tarea asociada al LED_2 */
 		/// a partir de acá defino lo que quiero que haga mi función SensarTask
 		printf("Sensando\n");
+		printf("%llu\n", TimerGetCount(TIMER_A));
 		if(activar == true){
 			distancia = HcSr04ReadDistanceInCentimeters();
 		}
