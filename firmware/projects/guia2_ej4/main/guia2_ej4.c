@@ -78,6 +78,7 @@ static void conversionADC(void *pParam){
 	while(true){
 		ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
 		AnalogInputReadSingle(CH1, &valores);
+		// la funcion Itoa convierte de int --> ascii
 		UartSendString(UART_PC,(char*) UartItoa(valores, 10));
 		UartSendString(UART_PC, "\r");
 	}
