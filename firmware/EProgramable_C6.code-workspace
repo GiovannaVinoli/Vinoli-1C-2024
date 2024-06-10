@@ -60,6 +60,9 @@
         },
         {
             "path": "projects/proyecto-integrador"
+        },
+        {
+            "path": "projects/examen"
         }
     ],
     "settings": {
