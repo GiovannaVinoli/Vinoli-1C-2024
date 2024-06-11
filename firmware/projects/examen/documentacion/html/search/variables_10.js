@@ -1,0 +1,28 @@
+var searchData=
+[
+  ['sample_5ffrec_0',['sample_frec',['../structanalog__input__config__t.html#a25204106348e34dfe9da6ac6e61b08c8',1,'analog_input_config_t']]],
+  ['scale_1',['SCALE',['../hx711_8c.html#a11d946235bb0123edad7b8947df9ac8a',1,'hx711.c']]],
+  ['sensar_5fhumedad_5ftask_5fhandle_2',['sensar_humedad_task_handle',['../examen_8c.html#ac24eed9f779dc81a7835c41471ff8406',1,'examen.c']]],
+  ['sensar_5fph_5ftask_5fhandle_3',['sensar_pH_task_handle',['../examen_8c.html#aee85408c126d3bb280cabacb72d7181e',1,'examen.c']]],
+  ['service_5fhandle_4',['service_handle',['../structgatts__profile__inst.html#a363e00d9262febd8d752ed2f933be1e4',1,'gatts_profile_inst']]],
+  ['service_5fid_5',['service_id',['../structgatts__profile__inst.html#a384758e259cfd64fcba9ecf7cb9bcca3',1,'gatts_profile_inst']]],
+  ['spi_5f1_6',['spi_1',['../spi__mcu_8c.html#a0a237932925279e740ad2f35122bda9c',1,'spi_mcu.c']]],
+  ['spi_5f1_5fisr_5fp_7',['spi_1_isr_p',['../spi__mcu_8c.html#aa9b8f1cd5882222c979d585bd8bafcd9',1,'spi_mcu.c']]],
+  ['spi_5f1_5fuser_5fdata_8',['spi_1_user_data',['../spi__mcu_8c.html#a44572ba7fd2411e129e231e167dffbab',1,'spi_mcu.c']]],
+  ['spi_5f2_9',['spi_2',['../spi__mcu_8c.html#a350c5eeed9a7697071fd6fcf68de2a39',1,'spi_mcu.c']]],
+  ['spi_5f2_5fisr_5fp_10',['spi_2_isr_p',['../spi__mcu_8c.html#ad19e020791d9f0a24d4b07a7f568e1c4',1,'spi_mcu.c']]],
+  ['spi_5f2_5fuser_5fdata_11',['spi_2_user_data',['../spi__mcu_8c.html#ab0fdc32c261fde185ce71d1bc39fa74f',1,'spi_mcu.c']]],
+  ['spi_5f3_12',['spi_3',['../spi__mcu_8c.html#ab651aa3ee48bd9dd7d95fe01cadba037',1,'spi_mcu.c']]],
+  ['spi_5f3_5fisr_5fp_13',['spi_3_isr_p',['../spi__mcu_8c.html#a69ecc920251934d2d9d311a9fc25ef68',1,'spi_mcu.c']]],
+  ['spi_5f3_5fuser_5fdata_14',['spi_3_user_data',['../spi__mcu_8c.html#a9364697c61d08e5cf1a5b37e61cd373f',1,'spi_mcu.c']]],
+  ['spi_5fconf_15',['spi_conf',['../ili9341_8c.html#aa7f1bcccbdc2615169d9c57878b037a0',1,'ili9341.c']]],
+  ['spp_5fconn_5fid_16',['spp_conn_id',['../struct_c_m_d__t.html#a344672121a59fb6bba3f67f9bb1c31fb',1,'CMD_t']]],
+  ['spp_5fgatts_5fif_17',['spp_gatts_if',['../struct_c_m_d__t.html#a39d90351e65b52b2933f34b350c2bb1d',1,'CMD_t']]],
+  ['state_18',['state',['../structesp__hidd__cb__param__t_1_1hidd__init__finish__evt__param.html#aaf0c455b3f346157a49bd3ef70098a9b',1,'esp_hidd_cb_param_t::hidd_init_finish_evt_param::state'],['../structesp__hidd__cb__param__t_1_1hidd__deinit__finish__evt__param.html#a69b6230f92e6ed19025fe9bdf9ddd524',1,'esp_hidd_cb_param_t::hidd_deinit_finish_evt_param::state'],['../structdigital__io__t.html#ab30ba07e2a0bd07a15e45a92c32db9c5',1,'digital_io_t::state']]],
+  ['status_19',['status',['../ble__hid__mcu_8c.html#a5361bd9ad8b63d5b91fea8a38d6242e1',1,'status:&#160;ble_hid_mcu.c'],['../ble__mcu_8c.html#a5361bd9ad8b63d5b91fea8a38d6242e1',1,'status:&#160;ble_mcu.c']]],
+  ['stripe_5fbright_20',['stripe_bright',['../neopixel__stripe_8c.html#a693d9d35a7e69903c6d6f96fbd08988f',1,'neopixel_stripe.c']]],
+  ['stripe_5fcolors_21',['stripe_colors',['../neopixel__stripe_8c.html#a676ea64a29acbfc17f5512646b1ec925',1,'neopixel_stripe.c']]],
+  ['stripe_5flength_22',['stripe_length',['../neopixel__stripe_8c.html#ae38763002b01e6e45dda23bd0a2309ea',1,'neopixel_stripe.c']]],
+  ['svc_5ffeatures_23',['svc_features',['../structhidd__feature__t.html#ae47fd301893a58a5e619aae839564441',1,'hidd_feature_t']]],
+  ['switches_5ftask_5fhandle_24',['switches_task_handle',['../examen_8c.html#a73ffb1e4bfe0a78a004ad9ee184802aa',1,'examen.c']]]
+];
