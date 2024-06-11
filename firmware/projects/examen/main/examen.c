@@ -37,9 +37,15 @@
 #include <stdint.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "uart_mcu.h"
+#include "timer_mcu.h"
+#include "gpio_mcu.h"
 #include "switch.h"
 
 /*==================[macros and definitions]=================================*/
+
+#define CONFIG_PERIOD_ms_1_SEG 1000
+#define CONFIG_PERIOD_mS_3_SEG 3000
 
 /** @def encender
  *  @brief variable booleana global que registra si el sistema está ON u OFF
@@ -51,17 +57,59 @@ bool encender = false;
  * @brief identificador de la tarea encargada de reconocer los switches
 */
 TaskHandle_t switches_task_handle = NULL;
+TaskHandle_t sensar_humedad_task_handle = NULL;
 
+/** @def gpioConfig_t
+ *  @brief Estructura que utilizaremos para confirugrar los diferentes pines GPIO
+*/
+typedef struct {
+	gpio_t pin;
+	io_t dir;
+}gpioConfig_t;
 /*==================[internal functions declaration]=========================*/
-
 /**
- * @fn static void SwitchesTask(void *pvParameter)
+ * @fn void inicializarGPIO(gpioConfig_t *vectorGpio)
+ * @brief Inicializa los pines y la dirección de salida en los que van a trabajar (input o output)
+ * @param vectorGpio puntero a vector que contiene datos de tipo struct
+ * @return 
+*/
+void inicializarGPIO(gpioConfig_t *vectorGpio, int cantidad){
+	for(int i=0; i<cantidad ; i++){
+		GPIOInit(vectorGpio[i].pin, vectorGpio[i].dir);
+	}
+}
+/**
+ * @fn static void Sensar_Humedad(void *pvParameter)
+ * @brief función que define la tarea sensar la humedad de la maceta.
+*/
+static void Sensar_Humedad(void *pvParameter){
+	bool gpio = false;
+	while (true)
+	{
+		if(encender == true){
+			gpio = GPIORead(GPIO_1);
+			if(gpio == true){
+				//Si necesito agua, enciendo la bomba de agua
+				GPIOOn(GPIO_21);
+			}
+			else{
+				GPIOOff(GPIO_21);
+			}
+		}
+		else{
+			GPIOOff(GPIO_21);
+		}
+		vTaskDelay(CONFIG_PERIOD_mS_3_SEG/portTICK_PERIOD_MS);
+	}
+}
+/**
+ * @fn static void Leer_Teclas(void *pvParameter)
  * @brief función que reconoce cuando se presionan los switches y cambia el estado 
  * de las variables que almacenan si el sistema está activo o no
  * @param pvParameter puntero que no es utilizado
  * @return 
 */
-static void SwitchesTask(void *pvParameter){
+static void Leer_Teclas(void *pvParameter){
 	uint8_t teclas;
 	while(true){
 		teclas = SwitchesRead();
@@ -77,7 +125,7 @@ static void SwitchesTask(void *pvParameter){
 		default:
 			break;
 		}
-		vTaskDelay(CONFIG_BLINK_PERIOD_200 / portTICK_PERIOD_MS);
+		vTaskDelay(CONFIG_PERIOD_ms_1_SEG / portTICK_PERIOD_MS);
 	}
 }
 
@@ -86,10 +134,12 @@ void app_main(void){
 
 	// inicialización de teclas	
 	SwitchesInit();
-
+	gpioConfig_t vectorGpio[5] = {{GPIO_1, GPIO_INPUT},{GPIO_3, GPIO_INPUT},{GPIO_21, GPIO_INPUT},{GPIO_22, GPIO_INPUT},{GPIO_23, GPIO_INPUT}};
+	inicializarGPIO(vectorGpio, 5);
 
 	//tareas
-	xTaskCreate(&SwitchesTask, "Switches", 512, NULL, 4, &switches_task_handle);
+	xTaskCreate(&Leer_Teclas, "Switches", 512, NULL, 4, &switches_task_handle);
+	xTaskCreate(&Sensar_Humedad, "Sensar", 512, NULL, 4, &sensar_humedad_task_handle);
 
 
 }
