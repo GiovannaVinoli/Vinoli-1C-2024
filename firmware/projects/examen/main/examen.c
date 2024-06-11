@@ -37,6 +37,7 @@
 #include <stdint.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "analog_io_mcu.h"
 #include "uart_mcu.h"
 #include "timer_mcu.h"
 #include "gpio_mcu.h"
@@ -51,13 +52,18 @@
  *  @brief variable booleana global que registra si el sistema está ON u OFF
 */
 bool encender = false;
+/** @def valores_pH
+ *  @brief variable que almacena los valores de pH en voltios
+*/
+uint16_t valores_pH;
 /*==================[internal data definition]===============================*/
 /**
- * @def switches_task_handle
- * @brief identificador de la tarea encargada de reconocer los switches
+ * @def TaskHandle_t
+ * @brief identificador de las tareas implementadas
 */
 TaskHandle_t switches_task_handle = NULL;
 TaskHandle_t sensar_humedad_task_handle = NULL;
+TaskHandle_t sensar_pH_task_handle = NULL;
 
 /** @def gpioConfig_t
  *  @brief Estructura que utilizaremos para confirugrar los diferentes pines GPIO
@@ -79,8 +85,38 @@ void inicializarGPIO(gpioConfig_t *vectorGpio, int cantidad){
 	}
 }
 /**
+ * @fn static void Sensar_pH(void *pvParameter)
+ * @brief función que define la tarea sensar el pH de la maceta y accionar las bombas
+ * de ser necesario para normalizarlo.
+*/
+static void Sensar_pH(void *pvParameter){
+
+	while(true){
+		if(encender == true){
+			AnalogInputReadSingle(CH3, &valores_pH);
+			//convierto a valores de pH utilizando la función lineal: y = (3/14)* x
+			if((valores_pH*(3/14)) < 6){
+				GPIOOn(GPIO_23);//enciendo la bomba de pHB
+			}
+			if((valores_pH*(3/14)) > 6.7){
+				GPIOOn(GPIO_22);//enciendo la bomba de pHA
+			}
+			else{
+				GPIOOff(GPIO_22);
+				GPIOOff(GPIO_23);
+			}
+		}
+		else{
+			GPIOOff(GPIO_22);
+			GPIOOff(GPIO_23);
+		}
+		vTaskDelay(CONFIG_PERIOD_mS_3_SEG/portTICK_PERIOD_MS);
+	}
+}
+/**
  * @fn static void Sensar_Humedad(void *pvParameter)
- * @brief función que define la tarea sensar la humedad de la maceta.
+ * @brief función que define la tarea sensar la humedad de la maceta y accionar la bomba de agua 
+ * de ser necesario para normalizarla.
 */
 static void Sensar_Humedad(void *pvParameter){
 	bool gpio = false;
@@ -132,14 +168,23 @@ static void Leer_Teclas(void *pvParameter){
 /*==================[external functions definition]==========================*/
 void app_main(void){
 
-	// inicialización de teclas	
+	// inicialización:	
 	SwitchesInit();
-	gpioConfig_t vectorGpio[5] = {{GPIO_1, GPIO_INPUT},{GPIO_3, GPIO_INPUT},{GPIO_21, GPIO_INPUT},{GPIO_22, GPIO_INPUT},{GPIO_23, GPIO_INPUT}};
-	inicializarGPIO(vectorGpio, 5);
+	
+	gpioConfig_t vectorGpio[4] = {{GPIO_1, GPIO_INPUT},{GPIO_21, GPIO_INPUT},{GPIO_22, GPIO_INPUT},{GPIO_23, GPIO_INPUT}};
+	inicializarGPIO(vectorGpio, 4);
+	
+	analog_input_config_t Analog_config = {
+		.input = CH3,
+		.mode = ADC_SINGLE
+	};
+
+	AnalogInputInit(&Analog_config);
 
 	//tareas
 	xTaskCreate(&Leer_Teclas, "Switches", 512, NULL, 4, &switches_task_handle);
 	xTaskCreate(&Sensar_Humedad, "Sensar", 512, NULL, 4, &sensar_humedad_task_handle);
+	xTaskCreate(&Sensar_pH, "Sensar", 1024, NULL, 4, &sensar_pH_task_handle);
 
 
 }
