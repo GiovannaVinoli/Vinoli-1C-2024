@@ -44,26 +44,42 @@
 #include "switch.h"
 
 /*==================[macros and definitions]=================================*/
-
+/// Definición de períodos de tiempo que utilizaré (1, 3 y 5 segundos)
 #define CONFIG_PERIOD_ms_1_SEG 1000
 #define CONFIG_PERIOD_mS_3_SEG 3000
+#define CONFIG_PERIOD_mS_5_SEG 5000
+
 
 /** @def encender
  *  @brief variable booleana global que registra si el sistema está ON u OFF
 */
 bool encender = false;
+
+/** @def bomba_pHA
+ *  @brief variable booleana global que registra si la bomba de pHA está encendida 
+*/
+bool bomba_pHA = false;
+
+/** @def bomba_pHB
+ *  @brief variable booleana global que registra si la bomba de pHB está encendida 
+*/
+bool bomba_pHB = false;
+
+/** @def bomba_agua
+ *  @brief variable booleana global que registra si la bomba de agua está encendida 
+*/
+bool bomba_agua = false;
+
 /** @def valores_pH
  *  @brief variable que almacena los valores de pH en voltios
 */
 uint16_t valores_pH;
 /*==================[internal data definition]===============================*/
-/**
- * @def TaskHandle_t
- * @brief identificador de las tareas implementadas
-*/
+/// Identificadores de las tareas implementadas
 TaskHandle_t switches_task_handle = NULL;
 TaskHandle_t sensar_humedad_task_handle = NULL;
 TaskHandle_t sensar_pH_task_handle = NULL;
+TaskHandle_t enviar_datos_UART_task_handle = NULL;
 
 /** @def gpioConfig_t
  *  @brief Estructura que utilizaremos para confirugrar los diferentes pines GPIO
@@ -72,6 +88,7 @@ typedef struct {
 	gpio_t pin;
 	io_t dir;
 }gpioConfig_t;
+
 /*==================[internal functions declaration]=========================*/
 /**
  * @fn void inicializarGPIO(gpioConfig_t *vectorGpio)
@@ -84,6 +101,7 @@ void inicializarGPIO(gpioConfig_t *vectorGpio, int cantidad){
 		GPIOInit(vectorGpio[i].pin, vectorGpio[i].dir);
 	}
 }
+
 /**
  * @fn static void Sensar_pH(void *pvParameter)
  * @brief función que define la tarea sensar el pH de la maceta y accionar las bombas
@@ -97,22 +115,29 @@ static void Sensar_pH(void *pvParameter){
 			//convierto a valores de pH utilizando la función lineal: y = (3/14)* x
 			if((valores_pH*(3/14)) < 6){
 				GPIOOn(GPIO_23);//enciendo la bomba de pHB
+				bomba_pHB = true;
 			}
 			if((valores_pH*(3/14)) > 6.7){
 				GPIOOn(GPIO_22);//enciendo la bomba de pHA
+				bomba_pHA = true;
 			}
 			else{
 				GPIOOff(GPIO_22);
 				GPIOOff(GPIO_23);
+				bomba_pHA = false;
+				bomba_pHB = false;
 			}
 		}
 		else{
 			GPIOOff(GPIO_22);
 			GPIOOff(GPIO_23);
+			bomba_pHA = false;
+			bomba_pHB = false;
 		}
 		vTaskDelay(CONFIG_PERIOD_mS_3_SEG/portTICK_PERIOD_MS);
 	}
 }
+
 /**
  * @fn static void Sensar_Humedad(void *pvParameter)
  * @brief función que define la tarea sensar la humedad de la maceta y accionar la bomba de agua 
@@ -127,44 +152,78 @@ static void Sensar_Humedad(void *pvParameter){
 			if(gpio == true){
 				//Si necesito agua, enciendo la bomba de agua
 				GPIOOn(GPIO_21);
+				bomba_agua = true;
 			}
 			else{
 				GPIOOff(GPIO_21);
+				bomba_agua = false;
 			}
 		}
 		else{
 			GPIOOff(GPIO_21);
+			bomba_agua = false;
 		}
 		vTaskDelay(CONFIG_PERIOD_mS_3_SEG/portTICK_PERIOD_MS);
 	}
 }
+
 /**
- * @fn static void Leer_Teclas(void *pvParameter)
- * @brief función que reconoce cuando se presionan los switches y cambia el estado 
- * de las variables que almacenan si el sistema está activo o no
- * @param pvParameter puntero que no es utilizado
- * @return 
+ * @fn void funcionUART(void *param)
+ * @brief función definida para configurar la UART
 */
-static void Leer_Teclas(void *pvParameter){
-	uint8_t teclas;
-	while(true){
-		teclas = SwitchesRead();
-		switch (teclas)
-		{
-		case SWITCH_1:
-			encender = true;
-			break;
-		
-		case SWITCH_2:
-			encender = false;
-			break;
-		default:
-			break;
+void funcionUART(void* param){
+	//como no leemos nada desde el puerto, no se configura
+}
+
+/**
+ * @fn void enviar_datos_UART(void *param)
+ * @brief función definida para enviar mensajes por la UART
+*/
+static void enviar_datos_UART(void* param){
+	while (true)
+	{
+		if(encender == true){
+			if(GPIORead(GPIO_1) == false){
+				UartSendString(UART_PC, "pH:");
+				UartSendString(UART_PC,(char*) UartItoa((valores_pH*(3/14)), 10));
+				UartSendString(UART_PC, ", humedad correcta\n");
+			}
+			if(GPIORead(GPIO_1) == true){
+				UartSendString(UART_PC, "pH:");
+				UartSendString(UART_PC,(char*) UartItoa((valores_pH*(3/14)), 10));
+				UartSendString(UART_PC, ", humedad incorrecta\n");
+			}
+			if(bomba_agua == true){
+				UartSendString(UART_PC, "Bomba de agua encendida\n");
+			}
+			if(bomba_pHA == true){
+				UartSendString(UART_PC, "Bomba de pHA encendida\n");
+			}
+			if(bomba_pHB == true){
+				UartSendString(UART_PC, "Bomba de pHB encendida\n");
+			}
 		}
-		vTaskDelay(CONFIG_PERIOD_ms_1_SEG / portTICK_PERIOD_MS);
+		vTaskDelay(CONFIG_PERIOD_mS_5_SEG/portTICK_PERIOD_MS);
 	}
 }
 
+/**
+ * @fn static void Encender_Sistema(void *pvParameter)
+ * @brief función encargada de poner la variable encender en true
+*/
+static void Encender_Sistema(void *pvParam){
+	bool *puntero= (bool*)(pvParam);
+	*puntero = true;
+}
+
+/**
+ * @fn static void Apagar_Sistema(void *pvParameter)
+ * @brief función encargada de poner la variable encender en false
+*/
+static void Apagar_Sistema(void *pvParam){
+	bool *puntero= (bool*)(pvParam);
+	*puntero = false;
+}
 /*==================[external functions definition]==========================*/
 void app_main(void){
 
@@ -181,10 +240,25 @@ void app_main(void){
 
 	AnalogInputInit(&Analog_config);
 
+	// configuración de la UART
+	serial_config_t Uart = {
+		.port = UART_PC,
+		.baud_rate = 9800,
+		.func_p = funcionUART,
+		.param_p = NULL
+	};
+
+	/// inicializo la UART
+	UartInit(&Uart);
+
+	// configuración de interrupciones para las teclas de encendido y apagado
+	SwitchActivInt(SWITCH_1,Encender_Sistema, &encender);
+	SwitchActivInt(SWITCH_2,Apagar_Sistema, &encender);
+
 	//tareas
-	xTaskCreate(&Leer_Teclas, "Switches", 512, NULL, 4, &switches_task_handle);
-	xTaskCreate(&Sensar_Humedad, "Sensar", 512, NULL, 4, &sensar_humedad_task_handle);
-	xTaskCreate(&Sensar_pH, "Sensar", 1024, NULL, 4, &sensar_pH_task_handle);
+	xTaskCreate(&Sensar_Humedad, "Sensar_humedad", 512, NULL, 4, &sensar_humedad_task_handle);
+	xTaskCreate(&Sensar_pH, "Sensar_pH", 1024, NULL, 4, &sensar_pH_task_handle);
+	xTaskCreate(&enviar_datos_UART, "Sensar_pH", 1024, NULL, 4, &enviar_datos_UART_task_handle);
 
 
 }
