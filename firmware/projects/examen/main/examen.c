@@ -1,8 +1,8 @@
-/*! @mainpage Examen
+/*! @mainpage Sistema de Irrigación automática de plantas
  *
  * @section genDesc General Description
  *
- *  irrigación automática de plantas
+ * 
  * Se diseña un dispositivo que controle la humedad y el pH de una plantera. 
  * Utilizando un sensor de humedad, se accionará o no la bomba de riego.
  * A partir de un sensor de pH, determinaremos si es necesario aumentarlo o 
@@ -35,14 +35,62 @@
 /*==================[inclusions]=============================================*/
 #include <stdio.h>
 #include <stdint.h>
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "switch.h"
+
 /*==================[macros and definitions]=================================*/
 
+/** @def encender
+ *  @brief variable booleana global que registra si el sistema está ON u OFF
+*/
+bool encender = false;
 /*==================[internal data definition]===============================*/
+/**
+ * @def switches_task_handle
+ * @brief identificador de la tarea encargada de reconocer los switches
+*/
+TaskHandle_t switches_task_handle = NULL;
 
 /*==================[internal functions declaration]=========================*/
 
+/**
+ * @fn static void SwitchesTask(void *pvParameter)
+ * @brief función que reconoce cuando se presionan los switches y cambia el estado 
+ * de las variables que almacenan si el sistema está activo o no
+ * @param pvParameter puntero que no es utilizado
+ * @return 
+*/
+static void SwitchesTask(void *pvParameter){
+	uint8_t teclas;
+	while(true){
+		teclas = SwitchesRead();
+		switch (teclas)
+		{
+		case SWITCH_1:
+			encender = true;
+			break;
+		
+		case SWITCH_2:
+			encender = false;
+			break;
+		default:
+			break;
+		}
+		vTaskDelay(CONFIG_BLINK_PERIOD_200 / portTICK_PERIOD_MS);
+	}
+}
+
 /*==================[external functions definition]==========================*/
 void app_main(void){
-	
+
+	// inicialización de teclas	
+	SwitchesInit();
+
+
+	//tareas
+	xTaskCreate(&SwitchesTask, "Switches", 512, NULL, 4, &switches_task_handle);
+
+
 }
 /*==================[end of file]============================================*/
