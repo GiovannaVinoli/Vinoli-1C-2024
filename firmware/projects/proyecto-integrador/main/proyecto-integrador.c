@@ -49,9 +49,9 @@ TaskHandle_t medir_tiempo_task_handle = NULL;
 bool gpio = false;
 bool ladrar = false;
 bool botonLanzar = false;
-char mensaje[100];
+char mensaje[20];
 int distancia = 0;
-uint64_t tiempo = 0;
+uint16_t tiempo = 0;
 
 TaskHandle_t enviar_datos_handle = NULL;
 TaskHandle_t medir_tiempo_handle = NULL;
@@ -74,11 +74,11 @@ static void reconocerLadrar(void *pParam){
 static void moverMotor(bool mover){
 	if(mover == true){
 		L293SetSpeed(MOTOR_1, 100);
-		printf("Motor on\n");
+		//printf("Motor on\n");
 	}
 	else{
 		L293SetSpeed(MOTOR_1, 0);
-		printf("Motor off\n");
+		//printf("Motor off\n");
 	}
 }
 
@@ -100,31 +100,46 @@ static void leerDatosBle(uint8_t * data, uint8_t length){
 // yo lo configuré para que si tiene un "*a" al inicio del mensaje se envíe ahí
 
 static void enviarDatos(void *pParam){
-	sprintf(mensaje, "*aTiempo: %lld\n*", tiempo);
-	BleSendString(mensaje);
-	vTaskDelay(CONFIG_PERIOD_mS_6seg/portTICK_PERIOD_MS);
+	while (true)
+	{
+		strcpy(mensaje, "");
+		sprintf(mensaje, "*aTiempo: %d\n*", tiempo);
+		BleSendString(mensaje);
+		vTaskDelay(CONFIG_PERIOD_mS_6seg/portTICK_PERIOD_MS);
+	}
+	
 }
 // leo desde el sensor infrarrojo si está o no la pelota, para
 // saber si accionar o no el dispositivo (no voy a "lanzar pelota" si no está)
 
 static void medir_tiempo(void *pParam){
 	bool timerStart = false, gpio_ant = false;
+	uint16_t contador=0;
 	while(true){
 		gpio = GPIORead(GPIO_3);
-		printf("Mido tiempo\n");
+		//printf("Mido tiempo\n");
 		if(gpio_ant == true && gpio == false){
-			TimerReset(timer_A.timer);
-			TimerStart(timer_A.timer);
+/* 			TimerReset(timer_A.timer);
+			TimerStart(timer_A.timer);*/
 			timerStart = true;
-			printf("Comienzo a contar\n");
+			printf("Comienzo a contar\n"); 
 		}
 		if(gpio_ant == false && gpio == true && timerStart == true){
-			TimerStop(timer_A.timer);
+/* 			TimerStop(timer_A.timer);
 			tiempo = TimerGetCount(timer_A.timer);
 			TimerReset(timer_A.timer);
-			printf("Tiempo: %lld\n", tiempo);
+			printf("Tiempo: %lld\n", tiempo);*/
 			timerStart = false;
-			printf("Paro de contar\n");
+			printf("Paro de contar\n"); 
+			//printf("Tiempo: %d\n", tiempo);
+		}
+		if(timerStart == true){
+			contador +=1;
+		}
+		if(timerStart == false){
+			tiempo = contador;
+			contador = 0;
+			printf("Tiempo: %d\n", tiempo);
 		}
 		gpio_ant = gpio;
 		vTaskDelay(CONFIG_PERIOD_mS_1seg/portTICK_PERIOD_MS);
@@ -134,10 +149,10 @@ static void medir_tiempo(void *pParam){
 static void lanzarPelota(void *pParam){
 	while(true){
 		//leerDatosBle();
-		printf("entro a lanzar pelota\n");
+		//printf("entro a lanzar pelota\n");
 		
 		gpio = GPIORead(GPIO_3);
-		printf("leo gpio\n");
+		//printf("leo gpio\n");
 		if(ladrar == true || botonLanzar == true){
 			// encender motor 
 			if(gpio == true){
@@ -190,7 +205,7 @@ void app_main(void){
 
 	L293Init();
 
-	//xTaskCreate(&enviarDatos, "enviar_datos", 512, NULL, 4, &enviar_datos_handle);
+	xTaskCreate(&enviarDatos, "enviar_datos", 2048, NULL, 4, &enviar_datos_handle);
 	xTaskCreate(&medir_tiempo, "medir_tiempo", 2048, NULL, 4, &medir_tiempo_handle);
 	xTaskCreate(&lanzarPelota, "lanzar_pelota", 2048, NULL, 4, &lanzar_pelota_handle);
 	xTaskCreate(&switchTask, "switch", 2048, NULL, 4, &switch_handle);
