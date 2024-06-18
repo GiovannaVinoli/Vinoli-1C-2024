@@ -121,7 +121,8 @@
             "string.h": "c",
             "random": "c",
             "_ansi.h": "c",
-            "pwm_mcu.h": "c"
+            "pwm_mcu.h": "c",
+            "l293.h": "c"
         },
     },
     "tasks": {
