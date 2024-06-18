@@ -119,7 +119,9 @@
             "mpu6050.h": "c",
             "i2c_mcu.h": "c",
             "string.h": "c",
-            "random": "c"
+            "random": "c",
+            "_ansi.h": "c",
+            "pwm_mcu.h": "c"
         },
     },
     "tasks": {

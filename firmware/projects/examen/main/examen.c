@@ -71,7 +71,7 @@ bool bomba_pHB = false;
 bool bomba_agua = false;
 
 /** @def valores_pH
- *  @brief variable que almacena los valores de pH en voltios
+ *  @brief variable que almacena los valores de pH en milivoltios
 */
 uint16_t valores_pH;
 /*==================[internal data definition]===============================*/
@@ -112,12 +112,12 @@ static void Sensar_pH(void *pvParameter){
 	while(true){
 		if(encender == true){
 			AnalogInputReadSingle(CH3, &valores_pH);
-			//convierto a valores de pH utilizando la función lineal: y = (3/14)* x
-			if((valores_pH*(3/14)) < 6){
+			//convierto a valores de pH utilizando la función lineal: y = (14/3000)* x
+			if((valores_pH*(14/3000)) < 6){
 				GPIOOn(GPIO_23);//enciendo la bomba de pHB
 				bomba_pHB = true;
 			}
-			if((valores_pH*(3/14)) > 6.7){
+			if((valores_pH*(14/3000)) > 6.7){
 				GPIOOn(GPIO_22);//enciendo la bomba de pHA
 				bomba_pHA = true;
 			}
@@ -230,7 +230,7 @@ void app_main(void){
 	// inicialización:	
 	SwitchesInit();
 	
-	gpioConfig_t vectorGpio[4] = {{GPIO_1, GPIO_INPUT},{GPIO_21, GPIO_INPUT},{GPIO_22, GPIO_INPUT},{GPIO_23, GPIO_INPUT}};
+	gpioConfig_t vectorGpio[4] = {{GPIO_1, GPIO_INPUT},{GPIO_21, GPIO_OUTPUT},{GPIO_22, GPIO_OUTPUT},{GPIO_23, GPIO_OUTPUT}};
 	inicializarGPIO(vectorGpio, 4);
 	
 	analog_input_config_t Analog_config = {
