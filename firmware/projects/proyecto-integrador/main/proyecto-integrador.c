@@ -42,7 +42,7 @@
 /*==================[macros and definitions]=================================*/
 // defino todos los tiempos en mili segundos.
 #define CONFIG_PERIOD_mS_1seg 1000
-#define CONFIG_PERIOD_mS_6seg 6000
+#define CONFIG_PERIOD_mS_4seg 4000
 #define CONFIG_PERIOD_uS_1seg 1000000
 //#define CONFIG_PERIOD_mS_125uS 0.125
 #define CONFIG_PERIOD_uS_A 1000 // trabajo a una frecuencia de 8KHz --> 1/8000 = 125 uSegundos.
@@ -51,17 +51,16 @@
 /*==================[internal data definition]===============================*/
 TaskHandle_t medir_tiempo_task_handle = NULL;
 bool gpio = false;
-//bool ladrar = false;
+bool ladrar = false;
 bool botonLanzar = false;
 char mensaje[20];
 int distancia = 0;
-volatile uint16_t tiempo;
-int data[50];
+//volatile uint16_t tiempo;
+uint16_t data[50];
 float data_filt[CHUNK];
-int umbral = 1000;
-bool esta_el_perro = false;
+int umbral = 1900;
 
-TaskHandle_t enviar_datos_handle = NULL;
+//TaskHandle_t enviar_datos_handle = NULL;
 TaskHandle_t medir_tiempo_handle = NULL;
 TaskHandle_t lanzar_pelota_handle = NULL;
 TaskHandle_t switch_handle = NULL;
@@ -71,53 +70,28 @@ TaskHandle_t reconocer_Ladrar = NULL;
 void funcionTimerA(void *pParam){
 	//agrego notificaciones
 	vTaskNotifyGiveFromISR(reconocer_Ladrar, pdFALSE);
+}
 
-}
-static void reconocerPerro(void *pParam){
-	float distancia = 0;
-	while (true)
-	{
-		distancia = HcSr04ReadDistanceInCentimeters();
-		if(distancia<30){
-			esta_el_perro = true;
-		}
-		else{
-			esta_el_perro = false;
-		}
-	}
-	
-}
-/*
 static void reconocerLadrar(void *pParam){
-	// genero filtro pasa banda de la señal entre 1250 y 1750 Hz.
 	int i = 0;
 	while (true)
 	{
 		ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
 		AnalogInputReadSingle(CH1, &data[i]);
 		i++; 
-		//printf("reconocer.ladrar\n");
 		if(i == CHUNK){
-			//HiPassFilter((float*)data, data_filt, CHUNK);
-			//LowPassFilter(data_filt, data_filt, CHUNK);
-			
 			for(int j = 0; j < CHUNK; j++){
-				if(data_filt[j]>umbral){
+				if(data[j]>umbral){
 					ladrar = true;
 					printf("ladrar es true\n");
+					//printf("vector%u\n", data[j]);
 				}
-				//UartSendString(UART_PC,(char*) UartItoa(data_filt[j], 10));
-				//UartSendString(UART_PC, "\r");
 			}
 			i =0;
 		}
+		
 	}
-
 }
-*/
-
-// leo lo que me devuelve el bluetooth
-// en mi caso solo acciono un botón para lanzar o no la pelota
 
 static void leerDatosBle(uint8_t * data, uint8_t length){
 	switch(data[0]){
@@ -133,53 +107,44 @@ static void leerDatosBle(uint8_t * data, uint8_t length){
 // por el módulo bluetooth a mi app. Como quiero mostrarlo en un panel de texto, 
 // yo lo configuré para que si tiene un "*a" al inicio del mensaje se envíe ahí
 
-static void enviarDatos(void *pParam){
-	while (true)
-	{
-		strcpy(mensaje, "");
-		sprintf(mensaje, "*aTiempo: %d\n*", tiempo);
-		BleSendString(mensaje);
-		vTaskDelay(CONFIG_PERIOD_mS_6seg/portTICK_PERIOD_MS);
-	}
-	
+static void enviarDatos(int tiempo){
+	strcpy(mensaje, "");
+	sprintf(mensaje, "*aTiempo: %u\n*", tiempo);
+	BleSendString(mensaje);
 }
 // leo desde el sensor infrarrojo si está o no la pelota, para
 // saber si accionar o no el dispositivo (no voy a "lanzar pelota" si no está)
 
 static void medir_tiempo(void *pParam){
-	bool timerStart = false, gpio_ant = false;
+	bool timerStart = false, gpio_ant = false, enviar = false;
 	uint16_t contador=0;
 	while(true){
 		gpio = GPIORead(GPIO_3);
 		//printf("Mido tiempo\n");
 		if(gpio_ant == true && gpio == false){
-/* 			TimerReset(timer_A.timer);
-			TimerStart(timer_A.timer);*/
 			timerStart = true;
-			printf("Comienzo a contar\n"); 
+			//printf("Comienzo a contar\n"); 
 		}
 		if(gpio_ant == false && gpio == true && timerStart == true){
-/* 			TimerStop(timer_A.timer);
-			tiempo = TimerGetCount(timer_A.timer);
-			TimerReset(timer_A.timer);
-			printf("Tiempo: %lld\n", tiempo);*/
 			timerStart = false;
-			printf("Paro de contar\n"); 
+			//printf("Paro de contar\n"); 
 			//printf("Tiempo: %d\n", tiempo);
 		}
 		if(timerStart == true){
 			contador +=1;
+			enviar = true;
 		}
-		if(timerStart == false){
-			tiempo = contador;
+		if(timerStart == false && enviar == true){
+			//tiempo = contador;
+			enviarDatos(contador);
+			printf("Tiempo: %u\n", contador);
 			contador = 0;
-			printf("Tiempo: %d\n", tiempo);
+			enviar = false;
 		}
 		gpio_ant = gpio;
 		vTaskDelay(CONFIG_PERIOD_mS_1seg/portTICK_PERIOD_MS);
 	}
 }
-
 static void moverMotor(bool mover){
 	if(mover == true){
 		L293SetSpeed(MOTOR_1, 100);
@@ -190,31 +155,25 @@ static void moverMotor(bool mover){
 		//printf("Motor off\n");
 	}
 }
-
 static void lanzarPelota(void *pParam){
 	while(true){
 		//leerDatosBle();
 		//printf("entro a lanzar pelota\n");
-		
 		gpio = GPIORead(GPIO_3);
 		//printf("leo gpio\n");
-		//if(ladrar == true || botonLanzar == true){
-		if(esta_el_perro == true || botonLanzar == true){
-			// encender motor 
-			if(gpio == true){
+		if(botonLanzar == true){
+			if(ladrar==true && gpio==true){
 				moverMotor(true);
+				ladrar=false;
 			}
-			if(gpio == false){
+			else{
 				moverMotor(false);
 			}
-			printf("lanzar pelota\n");
 		}
-		if(botonLanzar == false){
+		else{
 			moverMotor(false);
-
 		}
-
-		vTaskDelay(CONFIG_PERIOD_mS_6seg/portTICK_PERIOD_MS);
+		vTaskDelay(CONFIG_PERIOD_mS_4seg/portTICK_PERIOD_MS);
 	}
 }
 
@@ -237,9 +196,9 @@ void app_main(void){
 
 	SwitchesInit();
 
-	HcSr04Init(GPIO_3, GPIO_2);
+	//HcSr04Init(GPIO_3, GPIO_2);
 	// GPIO 1 configurado con el sensor infrarrojo
-	GPIOInit(GPIO_1, GPIO_INPUT);
+	GPIOInit(GPIO_3, GPIO_INPUT);
 
  
  	/// configuración de la UART
@@ -260,16 +219,13 @@ void app_main(void){
 
 	L293Init();
 
-	/*analog_input_config_t Analog_config = {
+	analog_input_config_t Analog_config = {
 		.input = CH1,
 		.mode = ADC_SINGLE
-	};*/
+	};
 
-	//AnalogInputInit(&Analog_config);
-	//AnalogOutputInit();
-
-	//LowPassInit(fm, 1750, ORDER_2);
-    //HiPassInit(fm, 1250, ORDER_2);
+	AnalogInputInit(&Analog_config);
+	AnalogOutputInit();
 
 	timer_config_t timerA = {
 		.timer = TIMER_A,
@@ -280,11 +236,11 @@ void app_main(void){
 	/// inicialización del timerA
 	TimerInit(&timerA);
 
-	xTaskCreate(&enviarDatos, "enviar_datos", 2048, NULL, 4, &enviar_datos_handle);
+	//xTaskCreate(&enviarDatos, "enviar_datos", 2048, NULL, 4, &enviar_datos_handle);
 	xTaskCreate(&medir_tiempo, "medir_tiempo", 2048, NULL, 4, &medir_tiempo_handle);
 	xTaskCreate(&lanzarPelota, "lanzar_pelota", 2048, NULL, 4, &lanzar_pelota_handle);
 	xTaskCreate(&switchTask, "switch", 2048, NULL, 4, &switch_handle);
-	//xTaskCreate(&reconocerLadrar, "switch", 2048, NULL, 4, &reconocer_Ladrar);
+	xTaskCreate(&reconocerLadrar, "switch", 2048, NULL, 4, &reconocer_Ladrar);
 
 	TimerStart(timerA.timer);
 
